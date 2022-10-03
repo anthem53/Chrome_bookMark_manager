@@ -86,7 +86,7 @@ def parse_html_to_treeView(fc : list) -> tree:
         elif lineType == "bookMark":
             temp = tree(rough,i)
             parent.add_child(temp)
-            print(temp.link)
+            #print(temp.link)
             #print("bookMark")
         elif lineType == "end":
             current = parent
