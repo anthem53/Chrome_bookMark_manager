@@ -87,10 +87,8 @@ def removeOld(root):
         return result
     
 
-
-
     currentFolder, recentFolder = findRecentFolder(root)
-
+    repetitionList = []
     for r in recentFolder.childrenList:
         if r.type == "bookMark":
             rPureText = get_pure_text(r.text)
@@ -99,25 +97,21 @@ def removeOld(root):
                 if c.type == "bookMark":
                     cPureText = get_pure_text(c.text)        
                     
-                    if rPureText == cPureText :  # find the same link in different foloders
-                        currentFolder.childrenList(c)
+                    #if rPureText == cPureText :  # find the same link in different foloders
+                    if r.text[0:15] == c.text[0:15]:
+                        repetitionList.append(c)
                 else:
                     pass
             
         else:
             pass
             
+    
+    for rep in repetitionList:
+        fc = remove_bookMark(fc,currentFolder,rep)
 
 
-    #print(currentFolder.text)
-    #print(recentFolder.text)
-
-
-
-
-
-
-file = open("bookmarks_22. 10. 3..html", "r", encoding="UTF-8")
+file = open("bookmarks_22. 9. 30..html", "r", encoding="UTF-8")
 
 fileContents = file.readlines()
 fc = fileContents
@@ -127,9 +121,10 @@ root = parse_html_to_treeView(fc)
 execute(root)
 root = parse_html_to_treeView(fc)
 
-file = open("result1.html","w", encoding="UTF-8")
+removeOld(root)
+root = parse_html_to_treeView(fc)
+
+file = open("result5.html","w", encoding="UTF-8")
 
 result = "".join(fc)
 file.write(result)
-
-removeOld(root)

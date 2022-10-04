@@ -44,6 +44,11 @@ class tree:
     
     def set_parent(self,parent):
         self.parent = parent
+    def remove_child(self,child):
+        if child in self.childrenList:
+            self.childrenList.remove(child)
+        else:
+            print("Child",child," is not in children List")
 
     def show_info(self):
         print("#"*20)
@@ -103,14 +108,33 @@ def update_link(fileContentsList, bookMark, newLink):
     return fileContentsList
     pass
 
+def remove_bookMark(fileContentsList, folderName, targetBookmark):
+    bookMarkNum = targetBookmark.lineNum
+    folderName.remove_child(targetBookmark)
+    fileContentsList[bookMarkNum] = ""
+    return fileContentsList
 
 if __name__ == "__main__":
 
-    file = open("bookmarks_22. 9. 21..html", "r", encoding="UTF-8")
+    file = open("bookmarks_22. 10. 3..html", "r", encoding="UTF-8")
 
     fileContents = file.readlines()
     fc = fileContents
 
     root = parse_html_to_treeView(fc)
-    
+
+    # 북마크바
+    folder = root.childrenList[0]
+    target = root.childrenList[0].childrenList[0]
+    targetNum = target.lineNum
+    print(fc[targetNum] )
+    print(target.text)
+    fc = remove_bookMark(fc,folder,target)
+    root = parse_html_to_treeView(fc)
+    print(fc[targetNum] ,targetNum)
+
+    file = open("resultTEST.html","w", encoding="UTF-8")
+
+    result = "".join(fc)
+    file.write(result)
     

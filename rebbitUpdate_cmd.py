@@ -43,33 +43,50 @@ def execute(elem):
 def removeOld(root):
     global  fc
 
-    recentFolder = None
-    currentFolder = None
-    def findRecentFolder (elem):
-        if elem.type == "rootfolder":
-            for child in elem.childrenList:
-                execute(child)
-        elif elem.type == "newfolderName" :
-            if elem.text == "최신화까지 다본거":
-                global recentFolder
-                recentFolder = elem
-            elif elem.text == "볼거":
-                global currentFolder
-                currentFolder = elem
+    def findRecentFolder(elem):
 
+        result = []
+        for child in elem.childrenList:
+            if child.type == "newfolderName":
+                #print("debug",child.text)
+                if child.text == "최신화까지 다본거":
+                    result.append(child)
+                    result += findRecentFolder(child)
+                elif child.text == "볼거":
+                    result.append(child)
+                    result += findRecentFolder(child)
+                else:
+                    result += findRecentFolder(child)
+            elif child.type == "bookMark":
+                pass
             else:
-                for child in elem.childrenList:
-                    execute(child)
-        elif elem.type == "bookMark":
-            pass
+                pass
 
+        return result
+    
+
+    currentFolder, recentFolder = findRecentFolder(root)
+    repetitionList = []
+    for r in recentFolder.childrenList:
+        if r.type == "bookMark":
+            #rPureText = get_pure_text(r.text)
+            
+            for c in currentFolder.childrenList:
+                if c.type == "bookMark":
+                    #cPureText = get_pure_text(c.text)        
+                    
+                    #if rPureText == cPureText :  # find the same link in different foloders
+                    if r.text[0:15] == c.text[0:15]:
+                        repetitionList.append(c)
+                else:
+                    pass
+            
         else:
-            print("Fail execute")
+            pass
+            
     
-    findRecentFolder(root)
-    print(recentFolder.text)
-    print(currentFolder.text)
-    
+    for rep in repetitionList:
+        fc = remove_bookMark(fc,currentFolder,rep)
 
 def test(elem):
     global fc
@@ -90,8 +107,6 @@ def test(elem):
 
 
 
-
-quit(1)
 if __name__ == "__main__":
 
     currentRabbitVersion = int(args.version)
@@ -106,6 +121,9 @@ if __name__ == "__main__":
     root = parse_html_to_treeView(fc)
 
     execute(root)
+    root = parse_html_to_treeView(fc)
+
+    removeOld(root)
     root = parse_html_to_treeView(fc)
 
     file = open(currentOutputFolder,"w", encoding="UTF-8")
