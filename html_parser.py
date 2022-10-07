@@ -33,7 +33,11 @@ class tree:
     def get_type(self):
         return self.type
     def get_text(self):
-        return self.text
+        if self.text != None:
+            result = self.text
+        else:
+            result = ""
+        return result
     def get_link(self):
         if self.type == "bookMark":
             return self.link
@@ -73,7 +77,7 @@ def parse_html_to_treeView(fc : list) -> tree:
             root = tree(rough,i)  
             current = root
             parent = None
-
+            root.text = "rootFolder"
             pass
         elif lineType == "newfolder": 
             #temp = tree(rough,i)
@@ -114,12 +118,13 @@ def remove_bookMark(fileContentsList, folderName, targetBookmark):
     fileContentsList[bookMarkNum] = ""
     return fileContentsList
 
+def get_fileContents(address):
+    file = open(address, "r", encoding="UTF-8")
+    fileContents = file.readlines()
+    return fileContents
 if __name__ == "__main__":
 
-    file = open("bookmarks_22. 10. 3..html", "r", encoding="UTF-8")
-
-    fileContents = file.readlines()
-    fc = fileContents
+    fc = get_fileContents("bookmarks_22. 10. 3..html")
 
     root = parse_html_to_treeView(fc)
 
