@@ -53,7 +53,6 @@ class mainWindowClass (QMainWindow,form_class):
 
     def show_folder(self,treeElem):
         self.folderNameLineEdit.setText(treeElem.text)
-
         self.fileListWidget.addItem(".")
         for c in treeElem.childrenList:
             if c.type == "bookMark":
@@ -68,7 +67,7 @@ class mainWindowClass (QMainWindow,form_class):
         targetText = self.fileListWidget.item(targetRow).text()
         print(targetText)
 
-        if targetText == ".":
+        if targetText == "." and self.current.type != "rootfolder":
             self.fileListWidget.clear()
             self.current = self.current.parent
             self.show_folder(self.current)
@@ -83,6 +82,8 @@ class mainWindowClass (QMainWindow,form_class):
                     else:
                         # bookMark:
                         print("bookMark double clicked")
+                        print(c.text)
+                        print(self.fc[c.lineNum])                        
                     #print("find")
                 else:
                     pass
