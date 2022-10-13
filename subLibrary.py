@@ -6,7 +6,7 @@ def get_type(s: str): -> str : html의 종류 보여줌. gui 표기되는건 디
 def get_text(roughString) -> str 해당 디렉토리 북마크의 이름을 얻음.
 def get_link(roughString): -> 북마크의 링크를 얻음.
 def set_link(roughstring:str, newLink:str): -> 북마크의 링크를 변경함.
-def set_text (roughString: str, newText:str): -> 북마크 폴더의 이름을 바꿈.
+def set_text (roughString: str, newText:str): -> 북마크, 폴더의 이름을 바꿈.
 
 '''
 
@@ -141,6 +141,24 @@ def set_text (roughString: str, newText:str):
     result = frontPart + newText + endPart
     return result
 
+# get fc and target tree bookMark. remove treeElem part in FC and return updated FC
+# if treeElem is not bookMark, return None
+def delete_bookMark(fc,treeElem):
+    if treeElem.type != "bookMark":
+        print("Elem is not Bookmark")
+        return None    
+    else:
+        del fc[treeElem.lineNum] 
+        treeElem.parent.childrenList.remove(treeElem)
+
+        return fc
+
+def delete_folder(fc,treeElem):
+    if treeElem != "newfolderName":
+        print("It is not folder")
+        return None
+    else:
+        pass
 
 
 if __name__ == "__main__" :

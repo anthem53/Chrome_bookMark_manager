@@ -53,7 +53,18 @@ class tree:
             self.childrenList.remove(child)
         else:
             print("Child",child," is not in children List")
-
+    def set_rough(self,newRough):
+        lineContent = newRough.strip()
+        #self.type = get_type(lineContent)
+        self.text = get_text(lineContent)
+        if self.type == "bookMark":
+            self.link = get_link(lineContent)
+        else:
+            self.link = None
+        self.rough = newRough
+        #self.lineNum = lineNum
+        #self.parent = None
+        pass
     def show_info(self):
         print("#"*20)
         print("type:" , self.type)
@@ -115,13 +126,45 @@ def update_link(fileContentsList, bookMark, newLink):
 def remove_bookMark(fileContentsList, folderName, targetBookmark):
     bookMarkNum = targetBookmark.lineNum
     folderName.remove_child(targetBookmark)
-    fileContentsList[bookMarkNum] = ""
+    del fileContentsList[bookMarkNum]
+
     return fileContentsList
+
+def remove_folder(fc, treeFolderElem):
+
+    startIndex = treeFolderElem.lineNum
+    i =  startIndex + 1
+    temp = 0
+    while True  :
+        targetRough = fc[i]
+        if get_type(targetRough) == 'newfolder':
+            temp += 1
+        elif get_type(targetRough) == 'end':
+            temp -= 1
+        else :
+            pass
+
+        if temp <= 0 :
+            break
+
+        i += 1
+    endIndex = i
+
+    print(startIndex, endIndex)
+
+    del fc[startIndex:endIndex+1]
+    return fc
 
 def get_fileContents(address):
     file = open(address, "r", encoding="UTF-8")
     fileContents = file.readlines()
     return fileContents
+
+def save_new_bookMark_file(fc, outputName):
+    file = open(outputName,"w", encoding="UTF-8")
+    result = "".join(fc)
+    file.write(result)
+    
 if __name__ == "__main__":
 
     fc = get_fileContents("bookmarks_22. 10. 3..html")
@@ -130,16 +173,13 @@ if __name__ == "__main__":
 
     # 북마크바
     folder = root.childrenList[0]
-    target = root.childrenList[0].childrenList[0]
+    target = root.childrenList[0].childrenList[9].childrenList[0]
     targetNum = target.lineNum
     print(fc[targetNum] )
     print(target.text)
-    fc = remove_bookMark(fc,folder,target)
+    fc = remove_folder(fc,target)
     root = parse_html_to_treeView(fc)
     print(fc[targetNum] ,targetNum)
 
-    file = open("resultTEST.html","w", encoding="UTF-8")
-
-    result = "".join(fc)
-    file.write(result)
+    save_new_bookMark_file(fc, "result.html")
     

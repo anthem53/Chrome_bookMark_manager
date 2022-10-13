@@ -4,10 +4,10 @@ from subLibrary import *
 import argparse
 
 fc = None
-currentRabbitVersion = 154
+currentRabbitVersion = 157
 
 # 인자값을 받을 수 있는 인스턴스 생성
-parser = argparse.ArgumentParser(description='사용법 테스트입니다.')
+parser = argparse.ArgumentParser(description='북마크를 자동 수정 및 중복된 내용 제거 하는 프로그램')
 
 # 입력받을 인자값 등록
 parser.add_argument('--version', required=True, help='What version is target site?')
