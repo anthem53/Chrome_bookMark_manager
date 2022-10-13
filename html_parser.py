@@ -1,4 +1,5 @@
 import re
+import io
 from subLibrary import *
 
 class tree:
@@ -156,6 +157,7 @@ def remove_folder(fc, treeFolderElem):
     return fc
 
 def get_fileContents(address):
+    
     file = open(address, "r", encoding="UTF-8")
     fileContents = file.readlines()
     return fileContents

@@ -100,6 +100,7 @@ class mainWindowClass (QMainWindow,form_class):
                 prefix = "[B] "
             elif c.type == "newfolderName":
                 prefix = "[F] "
+            
             self.fileListWidget.addItem(prefix + c.text)
         pass
     def refresh(self):
@@ -157,7 +158,7 @@ class mainWindowClass (QMainWindow,form_class):
             menu = QMenu()
             menu.addAction('편집',lambda: self.modify_folder(source.itemAt(event.pos())))
             menu.addAction('이동',lambda: print("이동"))
-            menu.addAction('삭제',lambda: self.delete_elem(self.find_elem_with_name(source.itemAt(event.pos()).text())))
+            menu.addAction('삭제',lambda: self.delete_item(source.itemAt(event.pos())))
             
             if menu.exec_(event.globalPos()):
                 pass
@@ -169,6 +170,8 @@ class mainWindowClass (QMainWindow,form_class):
         return super().eventFilter(source, event)
 
     def modify_folder(self,item):
+        if item == None:
+            return 
         elem = self.find_elem_with_name(item.text())
 
         renameWin = folderRenameClass()
@@ -183,7 +186,13 @@ class mainWindowClass (QMainWindow,form_class):
         else:
             print("modify_folder error")
             pass
-        
+    
+    def delete_item(self,item):
+        if item == None:
+            return 
+        elem = self.find_elem_with_name(item.text())
+        self.delete_elem(elem)
+
     def delete_elem(self,elem):
         
         def get_address(elem):
