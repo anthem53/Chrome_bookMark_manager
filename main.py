@@ -17,8 +17,32 @@ from PyQt5.QtCore import *
 
 form_class = uic.loadUiType("bookMark.ui")[0]
 folder_rename_class = uic.loadUiType("folderChange.ui")[0]
+bookmark_rename_class = uic.loadUiType("bookMarkChange.ui")[0]
 fc = None
 root = None
+
+class bookMarkRenameClass (QDialog,bookmark_rename_class):
+    def __init__(self,old_name="",old_link=""):
+        super().__init__()
+
+        self.setupUi(self)
+        self.initUi()
+        self.nameEdit.setText(old_name)
+        self.linkEdit.setText(old_link)
+        self.old_name = old_name
+        self.old_link = old_link
+            
+    def initUi(self):
+        self.setFixedSize(386,165)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+    
+    def execute_rename(self):
+        isOkclicked = super().exec_()
+        newFileName = self.nameEdit.text()
+        newFileLink = self.linkEdit.text()
+        return isOkclicked,newFileName,newFileLink
+
 
 class folderRenameClass (QDialog,folder_rename_class):
     def __init__(self,old_name=""):
@@ -26,11 +50,8 @@ class folderRenameClass (QDialog,folder_rename_class):
 
         self.setupUi(self)
         self.initUi()
-        self.old_name = old_name
-        if old_name == "":
-            print("default setting")
-        else :
-            print("existed setting")
+        self.lineEdit.setText(old_name)
+
             
     def initUi(self):
         #self.okButton.clicked.connect(self.onOKButtonClicked)
@@ -52,6 +73,10 @@ class mainWindowClass (QMainWindow,form_class):
         self.fc = None
         self.root = None
         self.current = None
+        self.cut_elem = None
+        self.copy_elem = None
+        self.is_cut = None
+        self.is_copy = None
 
         self.init_onefile('''C:\\Users\\LeeJihyeon\\Documents\\GitHub\\BookMark-Manager\\bookmarks_22. 10. 9..html''')
 
@@ -157,7 +182,9 @@ class mainWindowClass (QMainWindow,form_class):
         if event.type() == QEvent.ContextMenu and source is self.fileListWidget:
             menu = QMenu()
             menu.addAction('편집',lambda: self.modify_folder(source.itemAt(event.pos())))
-            menu.addAction('이동',lambda: print("이동"))
+            menu.addAction('잘라내기',lambda: self.cut_item(source.itemAt(event.pos())))
+            menu.addAction('복사',lambda: self.copy_item(source.itemAt(event.pos())))
+            menu.addAction('붙여넣기',lambda: self.paste_elem(source.itemAt(event.pos())))            
             menu.addAction('삭제',lambda: self.delete_item(source.itemAt(event.pos())))
             
             if menu.exec_(event.globalPos()):
@@ -166,7 +193,6 @@ class mainWindowClass (QMainWindow,form_class):
                 print("Fail to open menu")
             return True
 
-            return True
         return super().eventFilter(source, event)
 
     def modify_folder(self,item):
@@ -174,18 +200,29 @@ class mainWindowClass (QMainWindow,form_class):
             return 
         elem = self.find_elem_with_name(item.text())
 
-        renameWin = folderRenameClass()
-        isOK, newName = renameWin.execute_rename()
+        if elem.type == "newfolderName":
+            renameWin = folderRenameClass(elem.text)
+            isOK, newName = renameWin.execute_rename()
 
-        if isOK == 1 :
-            elem.set_rough(set_text(elem.rough,newName))
-            self.fc[elem.lineNum] = elem.rough
-            self.refresh()
-        elif isOK == 0:
+            if isOK == 1 :
+                elem.set_rough(set_text(elem.rough,newName))
+                self.fc[elem.lineNum] = elem.rough
+                self.refresh()
+            else:
+                pass
+        elif elem.type == "bookMark":
+            renameWin = bookMarkRenameClass(elem.text,elem.link)
+            isOK, newName, newLink = renameWin.execute_rename()
+            if isOK == 1 :
+                elem.set_rough(set_text(elem.rough,newName))
+                elem.set_rough(set_link(elem.rough,newLink))
+                self.fc[elem.lineNum] = elem.rough
+                self.refresh()
+            else:
+                pass
+        else :
             pass
-        else:
-            print("modify_folder error")
-            pass
+
     
     def delete_item(self,item):
         if item == None:
@@ -195,30 +232,7 @@ class mainWindowClass (QMainWindow,form_class):
 
     def delete_elem(self,elem):
         
-        def get_address(elem):
-        # rootFolder
-            
-            if elem.parent.type == "rootfolder" :
-                return []
-            else:
-                if elem.parent != None : 
-                    result = [elem.parent]
-                else:
-                    result = []
-                return get_address(elem.parent) + result
-            pass
         
-        def set_address(root,elem_address):
-            temp = root 
-            next = None
-            for folderelem in elem_address:
-                folderName = folderelem.text
-                for c in temp.childrenList:
-                    if c.text == folderName:
-                        next = c
-                        break
-                temp = next
-            return temp
         elem_address = get_address(elem)
 
 
@@ -238,6 +252,71 @@ class mainWindowClass (QMainWindow,form_class):
         #self.root = 
         self.current = set_address(self.root, elem_address)
         self.refresh()
+
+    def cut_item(self,item):
+        if item == None:
+            return 
+        elem = self.find_elem_with_name(item.text())
+        self.cut_elem = elem
+        self.cut_elem_address = get_address(self.cut_elem)
+        self.is_cut = True
+        self.is_copy = False
+        print(self.cut_elem_address)
+        pass
+
+    def copy_item(self,item):
+        if item == None:
+            return 
+        elem = self.find_elem_with_name(item.text())
+        self.copy_elem = elem
+        self.copy_elem_address = get_address(self.cut_elem)
+        self.is_cut = False
+        self.is_copy = True
+        pass
+
+    def paste_elem(self,destinationFolderItem):
+        
+        if destinationFolderItem == None:
+            destinationFolderElem = self.current
+        elif self.find_elem_with_name(destinationFolderItem.text()).type == "bookMark":
+            destinationFolderElem = self.current
+        else:
+            destinationFolderElem = self.find_elem_with_name(destinationFolderItem.text())
+
+        elem = None
+        if self.is_cut == True and self.is_copy == False: 
+            elem = self.cut_elem
+        elif self.is_copy == True and self.is_cut == True : 
+            elem = self.copy_elem
+        else:
+            print("Wrong programming")
+            quit(1)
+
+
+        # Tree structure Part
+        if elem.type == "bookMark":
+            old_parent = elem.parent
+            destinationFolderElem.childrenList.append(elem)
+            old_parent.childrenList.remove(elem)
+            elem.parent = destinationFolderElem
+
+            move_bookMark(self.fc, destinationFolderElem,elem)
+            pass
+        elif elem.type == "newfolderName":
+            old_parent = elem.parent
+            destinationFolderElem.childrenList.append(elem)
+            old_parent.childrenList.remove(elem)
+            elem.parent = destinationFolderElem
+
+            pass
+        else:
+            
+            quit("paste_elem, warning")
+
+        self.refresh()
+
+        # FC part, 
+        pass
 
     def find_elem_with_name(self,name):
         name = ' '.join(name.split(' ')[1:])

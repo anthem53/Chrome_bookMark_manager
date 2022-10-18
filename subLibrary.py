@@ -141,24 +141,69 @@ def set_text (roughString: str, newText:str):
     result = frontPart + newText + endPart
     return result
 
-# get fc and target tree bookMark. remove treeElem part in FC and return updated FC
-# if treeElem is not bookMark, return None
-def delete_bookMark(fc,treeElem):
-    if treeElem.type != "bookMark":
-        print("Elem is not Bookmark")
-        return None    
-    else:
-        del fc[treeElem.lineNum] 
-        treeElem.parent.childrenList.remove(treeElem)
+def find_last_children_lineNum (fc, folderline):
 
-        return fc
+    startIndex = folderline
+    i = startIndex + 1
+    count  = 0
+    while True : 
+        if get_type(fc[i]) == "newfolder":
+            count += 1
+        elif get_type(fc[i]) == "end":
+            count -= 1
+        else:
+            pass
 
-def delete_folder(fc,treeElem):
-    if treeElem != "newfolderName":
-        print("It is not folder")
-        return None
+        if count == 0 :
+            break
+
+        i += 1
+    return i - 1
+
+def find_first_children_lineNum (fc, folderline):
+
+    result = folderline + 2
+
+    return result
+
+def get_folder_end (fc, folderline):
+
+    startIndex = folderline
+    i = startIndex + 1
+    count  = 0
+    while True : 
+        if get_type(fc[i]) == "newfolder":
+            count += 1
+        elif get_type(fc[i]) == "end":
+            count -= 1
+        else:
+            pass
+
+        if count == 0 :
+            break
+
+        i += 1
+    return i 
+
+
+def is_folder_empty(fc,folderline):
+    if get_type(fc[find_first_children_lineNum (fc, folderline)]) == "end":
+        return True
     else:
-        pass
+        return False
+
+def get_prefix_spaceNum(roughText):
+
+    count = 0
+
+    for c in roughText:
+        if c == " ":
+            count += 1
+        else:
+            break
+    
+
+    return count
 
 
 if __name__ == "__main__" :

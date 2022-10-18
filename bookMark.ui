@@ -101,7 +101,20 @@
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>검색</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>기능</string>
+    </property>
+    <addaction name="action"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_3"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionsetting">
@@ -127,6 +140,11 @@
   <action name="actionSetting">
    <property name="text">
     <string>Setting</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>만렙토끼 </string>
    </property>
   </action>
  </widget>
