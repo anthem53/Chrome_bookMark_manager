@@ -1,5 +1,11 @@
 # Chrome_bookMark_manager
 
+## Environment 
+- window 10
+
+## library
+- pyqt
+
 ## To do 
 - GUI system
   - 파일, 폴더 이동기능
