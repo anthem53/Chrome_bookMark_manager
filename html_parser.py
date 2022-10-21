@@ -112,9 +112,11 @@ def parse_html_to_treeView(fc : list) -> tree:
             #print(temp.link)
             #print("bookMark")
         elif lineType == "end":
-            current = parent
-            parent = current.get_parent()
-            #print("end")
+            
+            if parent != None : 
+                current = parent
+                parent = current.get_parent()
+                #print("end")
 
     return root
 
@@ -193,9 +195,16 @@ def new_folder(fc,parentFolderElem, newName):
     pass
 
 def move_bookMark(fc,destFolderElem, targetElem):
-    print(destFolderElem.text)
-    print(fc[destFolderElem.lineNum])
+    
+    # 부모자식관계 처리
+    targetElem.parent.childrenList.remove(targetElem)
+    destFolderElem.add_child(targetElem)
 
+    # 부모 공백
+    destFolderPrefixSpaceNum = get_prefix_spaceNum(destFolderElem.rough)
+    
+
+    old_elem_index = targetElem.lineNum
     startIndex = destFolderElem.lineNum
     count = 0
     i = startIndex + 1
@@ -212,34 +221,34 @@ def move_bookMark(fc,destFolderElem, targetElem):
             break
 
         i += 1
+    temp = (" "*(destFolderPrefixSpaceNum + 4) )+ targetElem.rough.strip()
+
+    is_larger_than_dest = 1 if i < old_elem_index else 0
+    fc.insert(i,temp)
+    del fc[old_elem_index + is_larger_than_dest]
     
-    fc.insert(i,targetElem.rough)
-    fc.remove(targetElem.rough)
-    
-    print(fc[i], fc[i-1])
-    pass
+    return fc
 
 def move_Folder(fc,destFolderElem,targetElem):
 
-    # 부모자식관계 처리
-    targetElem.parent.childrenList.remove(targetElem)
-    destFolderElem.add_child(targetElem)
     
     destRough = fc[destFolderElem.lineNum]
     
-    #폴더 끝 인덱스 구함.
+    #타겟 폴더 끝 인덱스 구함.
     folderEndLine = get_folder_end(fc,targetElem.lineNum)
     
     #원하는 부분 도려냄.
     targetFCLines = fc[targetElem.lineNum:folderEndLine + 1]
+    
 
     # 도려낸 부분 빼고 합침.
-    fc_without_targetFolder = fc[0:targetElem.lineNum] + fc[folderEndLine:]
+    
+    fc_without_targetFolder = fc[0:targetElem.lineNum] + fc[folderEndLine + 1:]
     targetIndex = fc_without_targetFolder.index(destRough) + 2
 
     destFolderPrefixSpaceNum = get_prefix_spaceNum(destFolderElem.rough)
     currentPrifixSpace =  " " * (destFolderPrefixSpaceNum + 4)
-    # 공백처리 아직 안해줌.
+    # 공백처리 및 붙혀넣기. 
     for s in targetFCLines:
         ss = s.strip()
 
@@ -263,8 +272,9 @@ def move_Folder(fc,destFolderElem,targetElem):
 
 def get_address(elem):
         # rootFolder
-            
-            if elem.parent.type == "rootfolder" :
+            if elem.type == "rootfolder":
+                return []
+            elif elem.parent.type == "rootfolder" :
                 return []
             else:
                 if elem.parent != None : 
@@ -277,6 +287,9 @@ def get_address(elem):
 def set_address(root,elem_address):
     temp = root 
     next = None
+
+    if elem_address[0].type == 'rootfolder':
+        return root
     for folderelem in elem_address:
         folderName = folderelem.text
         for c in temp.childrenList:
@@ -315,8 +328,11 @@ if __name__ == "__main__":
     sFolder =root.childrenList[0].childrenList[8] 
     target = root.childrenList[0].childrenList[9].childrenList[0]
     targetFolder = root.childrenList[0].childrenList[8] 
+
+    postech = root.childrenList[0].childrenList[2]
+    school = root.childrenList[0].childrenList[3]
     
-    fc = move_Folder(fc,root,root.childrenList[0].childrenList[9])
+    fc = move_Folder(fc,school,postech)
     
 
     save_new_bookMark_file(fc, "result.html")

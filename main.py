@@ -235,7 +235,6 @@ class mainWindowClass (QMainWindow,form_class):
         
         elem_address = get_address(elem)
 
-
         for t in elem_address:
             if t != None :
                 print(t.text)
@@ -258,10 +257,8 @@ class mainWindowClass (QMainWindow,form_class):
             return 
         elem = self.find_elem_with_name(item.text())
         self.cut_elem = elem
-        self.cut_elem_address = get_address(self.cut_elem)
         self.is_cut = True
         self.is_copy = False
-        print(self.cut_elem_address)
         pass
 
     def copy_item(self,item):
@@ -269,13 +266,15 @@ class mainWindowClass (QMainWindow,form_class):
             return 
         elem = self.find_elem_with_name(item.text())
         self.copy_elem = elem
-        self.copy_elem_address = get_address(self.cut_elem)
         self.is_cut = False
         self.is_copy = True
         pass
 
     def paste_elem(self,destinationFolderItem):
         
+        if self.is_copy == False and self.is_cut == False:
+            return
+
         if destinationFolderItem == None:
             destinationFolderElem = self.current
         elif self.find_elem_with_name(destinationFolderItem.text()).type == "bookMark":
@@ -286,37 +285,33 @@ class mainWindowClass (QMainWindow,form_class):
         elem = None
         if self.is_cut == True and self.is_copy == False: 
             elem = self.cut_elem
-        elif self.is_copy == True and self.is_cut == True : 
+        elif self.is_copy == True and self.is_cut == False : 
             elem = self.copy_elem
         else:
-            print("Wrong programming")
-            quit(1)
-
+            quit("Wrong programming")
 
         # Tree structure Part
         if elem.type == "bookMark":
-            old_parent = elem.parent
+            old_parent = elem   .parent
             destinationFolderElem.childrenList.append(elem)
             old_parent.childrenList.remove(elem)
             elem.parent = destinationFolderElem
 
-            move_bookMark(self.fc, destinationFolderElem,elem)
+            self.fc = move_bookMark(self.fc, destinationFolderElem,elem)
+            self.root = parse_html_to_treeView(self.fc)
             pass
         elif elem.type == "newfolderName":
-            old_parent = elem.parent
-            destinationFolderElem.childrenList.append(elem)
-            old_parent.childrenList.remove(elem)
-            elem.parent = destinationFolderElem
-
+            self.fc = move_Folder(self.fc, destinationFolderElem,elem)
+            self.root = parse_html_to_treeView(self.fc)
             pass
         else:
             
             quit("paste_elem, warning")
 
+        
+        self.current = set_address(self.root, get_address(self.current) + [self.current])
         self.refresh()
 
-        # FC part, 
-        pass
 
     def find_elem_with_name(self,name):
         name = ' '.join(name.split(' ')[1:])
