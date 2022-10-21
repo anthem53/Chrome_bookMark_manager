@@ -229,6 +229,19 @@ def move_bookMark(fc,destFolderElem, targetElem):
     
     return fc
 
+
+def copy_bookMark(fc,destFolderElem, targetElem):
+    
+    # 부모 공백
+    destFolderPrefixSpaceNum = get_prefix_spaceNum(destFolderElem.rough)
+    
+    destline = find_last_children_lineNum(fc,destFolderElem.lineNum)
+    temp = (" "*(destFolderPrefixSpaceNum + 4) )+ targetElem.rough.strip()
+
+    fc.insert(destline + 1,temp)
+    
+    return fc
+
 def move_Folder(fc,destFolderElem,targetElem):
 
     
@@ -265,10 +278,40 @@ def move_Folder(fc,destFolderElem,targetElem):
         targetIndex += 1
 
     return fc_without_targetFolder
+
+def copy_Folder(fc,destFolderElem,targetElem):
+
     
+    destRough = fc[destFolderElem.lineNum]
+    
+    #타겟 폴더 끝 인덱스 구함.
+    folderEndLine = get_folder_end(fc,targetElem.lineNum)
+    
+    #원하는 부분 도려냄.
+    targetFCLines = fc[targetElem.lineNum:folderEndLine + 1]
+    
+    # 집어 넣을 부분 인덱스 구함.
+    targetIndex = destFolderElem.lineNum + 2
 
+    destFolderPrefixSpaceNum = get_prefix_spaceNum(destFolderElem.rough)
+    currentPrifixSpace =  " " * (destFolderPrefixSpaceNum + 4)
+    # 공백처리 및 붙혀넣기. 
+    for s in targetFCLines:
+        ss = s.strip()
 
-    pass
+        if get_type(ss) == 'end':
+            currentPrifixSpace = currentPrifixSpace [0:-4]
+
+        ss = currentPrifixSpace + ss + "\n"
+
+        fc.insert(targetIndex,ss)
+        if get_type(ss) == "newfolder":
+            currentPrifixSpace += '    '
+        
+        targetIndex += 1
+
+    return fc
+
 
 def get_address(elem):
         # rootFolder
