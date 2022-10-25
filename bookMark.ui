@@ -111,6 +111,7 @@
      <string>기능</string>
     </property>
     <addaction name="action"/>
+    <addaction name="actiontest"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
@@ -145,6 +146,11 @@
   <action name="action">
    <property name="text">
     <string>만렙토끼 </string>
+   </property>
+  </action>
+  <action name="actiontest">
+   <property name="text">
+    <string>test</string>
    </property>
   </action>
  </widget>

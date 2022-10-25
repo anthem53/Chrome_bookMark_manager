@@ -37,7 +37,7 @@ def get_text(roughString):
     # end  bookMark  newfolder newfolderName rootfodler
     strType = get_type(roughString)
     #print(strType)
-    if strType == "rootfodler" or strType == "newfolderName" or strType == "bookMark":
+    if strType == "rootfolder" or strType == "newfolderName" or strType == "bookMark":
         isbracket = False
         textStartIndex = None
         textEndIndex = None
@@ -206,9 +206,36 @@ def get_prefix_spaceNum(roughText):
     return count
 
 
+def get_tag_content(roughText):
+    p = re.compile("<.+?>")
+    lineContent = roughText.strip()
+
+    text_type = get_type(roughText)
+
+    target =  p.findall(roughText)[1][1:-1]
+    result = []
+    for e in target.split(' '):
+        
+        if '=' not in e:
+            pass
+        else:
+            index = None
+            for i in range(len(e)):
+                if e[i] == "=":
+                    index = i
+                    break
+                else:
+                    pass
+
+            tag = e[0:i]
+            content = e[i+2:-1]
+            result.append((tag,content))
+
+    return result
+
 if __name__ == "__main__" :
     a = '''<DT><H3 ADD_DATE="1663067002" LAST_MODIFIED="1663731763">최신화까지 다본거</H3>'''
-    b = "테스트하고 있는거임. ㅇㄱㄹㅇ"
-    result = set_text(a,b)
+    b = '''<DT><A HREF="http://povis.postech.ac.kr/irj/portal" ADD_DATE="1630989655" ICON="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACNElEQVQ4jdWSXUiTcRTGf/93Y9p0pm5BdSNI8WoZRF94EeIwQ8i0D4QVBCFFYEEFEWSEbxcVZhp454UpURh0k6mURB9qaCghYQWrxMgcUlvics7t3Xa6cIpXXXXT7+acB87znHNx4L9H6Xqrw+v1AqDrTrzeADpOcIHXDxDAhRMn4NJB1xsAPy50bj72xhXUzoINEMBksTeT+dZkXdIJstKDWCxWIuG5xM496Q7lOdctNScKyciwcad1gOZrIzS2HcCRJpw984zjNVspKVyPZZWd3ic+WupfI2ZQdpetVqX7c/otY0P3jOHhn/Jq4DN+/xwq1U77rb1qe/5aOvsn5Eh5LhUlW9Rg31epO79LjX8PRTXbpNVzclNnpHpNuRYRRVHROiWIetDxVlVVFqgPEz6Gx6aoLMtTv80onybn5ULdS+WblWjV4Tybu2JDT9rRQJWh3HE2l96VpvYhmYnE5OO3aZkOhqXt0aAYzUMyHYomno+OJ2IxU37Nm5EfCyI3Onq6MNAABSga29+J53SvDL4PyBKmhGRBIsv6iy8WOWU8lev3O7sADUQlA1APX3ijuTlZ+KZmCEfCpFgTXLk6QtSEy5e2kZ1hS4SsqSlDb0a7m4KeSgwRtegVAKXS68Vht2LGBYVg0cAMLcZr9jgbC7LZdyyt+2B136EdqiXGCjOAuni7oy4aS6Bp2vJ3aTYgAUopybSmmLX5mQ3K7Y4lz142/xNUsWFY/zZQDBiGEfunW1fyB1JQAGCsUAVpAAAAAElFTkSuQmCC">홈 - 학부생 - SAP NetWeaver Portal</A>'''
+    result = get_tag_content(b)
 
     print(result)

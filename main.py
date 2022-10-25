@@ -77,19 +77,26 @@ class mainWindowClass (QMainWindow,form_class):
         self.copy_elem = None
         self.is_cut = None
         self.is_copy = None
+        self.copy_elem_list = []
+        self.cut_elem_list = []
 
         self.init_onefile('''C:\\Users\\LeeJihyeon\\Documents\\GitHub\\BookMark-Manager\\bookmarks_22. 10. 9..html''')
 
     def initUi(self):
         self.actionOpen.triggered.connect(lambda : self.open_bookMarkFile())
-        self.actionSave.triggered.connect(lambda : self.saveBookMark())
+        #self.actionSave.triggered.connect(lambda : self.saveBookMark())
+        self.actionSave.triggered.connect(lambda : self.saveBookMark2())
         self.actionSetting.triggered.connect(lambda : print("Setting"))
         self.actionQuit.triggered.connect(lambda : print("Quit"))
+
+        self.actiontest.triggered.connect(lambda : self.test())
 
         
         self.fileListWidget.installEventFilter(self)
         self.fileListWidget.setStyleSheet("alternate-background-color: rgb(230,230,230);background-color: white;")
         self.fileListWidget.doubleClicked.connect(self.itemDoubleClicked)
+
+        self.fileListWidget.setSelectionMode(QAbstractItemView.ExtendedSelection)
         pass
         #self.okButton.clicked.connect(self.onOKButtonClicked)
         #self.cancelButton.clicked.connect(self.onCancelButtonClicked)
@@ -107,6 +114,11 @@ class mainWindowClass (QMainWindow,form_class):
 
         print(self.root.childrenList[0].text)
         self.show_folder(self.root)
+    
+    def test(self):
+        for e in self.fileListWidget.selectedItems():
+            print(e.text())
+
 
     # Debugging
     def init_onefile(self,fname):
@@ -173,6 +185,22 @@ class mainWindowClass (QMainWindow,form_class):
         else:
             print('Cancelled')
 
+    def saveBookMark2(self):
+        saveDialog = QFileDialog()
+        saveDialog.setFilter(saveDialog.filter() | QtCore.QDir.Hidden)
+        saveDialog.setDefaultSuffix('html')
+        saveDialog.setAcceptMode(QFileDialog.AcceptSave)
+        saveDialog.setNameFilters(['HTML (*.html)'])
+
+        if saveDialog.exec_() == QDialog.Accepted:
+            fileName  = saveDialog.selectedFiles()[0]
+            print(fileName)
+            currentFC = create_fc_from_tree(self.root)
+            save_new_bookMark_file(currentFC,fileName)
+        else:
+            print('Cancelled')
+
+
         #text =   QFileDialog.getSaveFileName(self, 'Save file', '.html')
 
         #
@@ -182,9 +210,12 @@ class mainWindowClass (QMainWindow,form_class):
         if event.type() == QEvent.ContextMenu and source is self.fileListWidget:
             menu = QMenu()
             menu.addAction('편집',lambda: self.modify_folder(source.itemAt(event.pos())))
-            menu.addAction('잘라내기',lambda: self.cut_item(source.itemAt(event.pos())))
-            menu.addAction('복사',lambda: self.copy_item(source.itemAt(event.pos())))
-            menu.addAction('붙여넣기',lambda: self.paste_elem(source.itemAt(event.pos())))            
+            menu.addAction('잘라내기',lambda: self.cut_items())
+            #menu.addAction('잘라내기',lambda: self.cut_item(source.itemAt(event.pos())))
+            menu.addAction('복사',lambda: self.copy_items())
+            #menu.addAction('복사',lambda: self.copy_item(source.itemAt(event.pos())))
+            menu.addAction('붙여넣기',lambda: self.paste_elems())            
+            #menu.addAction('붙여넣기',lambda: self.paste_elem(source.itemAt(event.pos())))            
             menu.addAction('삭제',lambda: self.delete_item(source.itemAt(event.pos())))
             
             if menu.exec_(event.globalPos()):
@@ -252,6 +283,23 @@ class mainWindowClass (QMainWindow,form_class):
         self.current = set_address(self.root, elem_address)
         self.refresh()
 
+    def cut_items(self):
+
+            selectedItemList = self.fileListWidget.selectedItems()
+            if len(selectedItemList) == 0:
+                return None
+
+            self.cut_elem_list = []
+            for item in selectedItemList:
+ 
+                elem = self.find_elem_with_item_text(item.text())
+                self.cut_elem_list.append(elem) 
+                
+            
+            self.is_cut = True
+            self.is_copy = False
+
+
     def cut_item(self,item):
         if item == None:
             return 
@@ -259,6 +307,23 @@ class mainWindowClass (QMainWindow,form_class):
         self.cut_elem = elem
         self.is_cut = True
         self.is_copy = False
+        pass
+
+    def copy_items(self):
+        selectedItemList = self.fileListWidget.selectedItems()
+        if len(selectedItemList) == 0:
+            return None
+
+        self.copy_elem_list = []
+        for item in selectedItemList:
+
+            elem = self.find_elem_with_item_text(item.text())
+            self.copy_elem_list.append(elem) 
+            
+        
+        self.is_copy = True
+        self.is_cut = False
+
         pass
 
     def copy_item(self,item):
@@ -269,6 +334,51 @@ class mainWindowClass (QMainWindow,form_class):
         self.is_cut = False
         self.is_copy = True
         pass
+
+    def paste_elems(self):
+        if self.is_copy == False and self.is_cut == False:
+            return
+
+        destinationFolderElem = self.current
+
+        elem_list = None
+        if self.is_cut == True and self.is_copy == False: 
+            elem_list = self.cut_elem_list
+        elif self.is_copy == True and self.is_cut == False : 
+            elem_list = self.copy_elem_list
+        else:
+            quit(" paste_elems(self) : Wrong programming")
+
+        
+        if self.is_copy == True :
+            for e in elem_list:
+                #e.parent.childrenList.remove(e)
+                e.parent = destinationFolderElem
+                
+                if e.type == "bookMark":
+                    e.parent.childrenList.append(e)
+                elif e.type =="newfolderName":
+                    e.parent.childrenList.insert(0,e)
+                else:
+                    print("paste_elems() : something wrong")
+            self.refresh()
+        elif self.is_cut == True:
+            for e in elem_list:
+                e.parent.childrenList.remove(e)
+                e.parent = destinationFolderElem
+                
+                if e.type == "bookMark":
+                    e.parent.childrenList.append(e)
+                elif e.type =="newfolderName":
+                    e.parent.childrenList.insert(0,e)
+                else:
+                    print("paste_elems() : something wrong")
+            self.cut_elem_list = []
+            self.is_cut = False
+            self.refresh()
+        else:
+            pass
+
 
     def paste_elem(self,destinationFolderItem):
         
@@ -303,7 +413,7 @@ class mainWindowClass (QMainWindow,form_class):
                 pass
             else:
                 quit("paste_elem, warning")
-            self.cut == False 
+            self.is_cut = False 
             self.cut_elem = None
             self.current = set_address(self.root, get_address(self.current) + [self.current])
             self.refresh()

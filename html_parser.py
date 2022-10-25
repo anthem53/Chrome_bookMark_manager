@@ -13,19 +13,50 @@ class tree:
             self.llineNum = None
             self.rough = None
             self.parent = None
+            self.icon = None 
+            self.add_date = None
+            self.last_modified = None
+            
         else:
             lineContent = rough.strip()
             self.type = get_type(lineContent)
             self.text = get_text(lineContent)
+            '''
             if self.type == "bookMark":
                 self.link = get_link(lineContent)
             else:
                 self.link = None
+            '''
             self.rough = rough
             self.lineNum = lineNum
             self.parent = None
 
+            self.link = None
+            self.icon = None 
+            self.add_date = None
+            self.last_modified = None
+            self.personal_toolbar_folder = False
+            self.init_tag_content(rough)
+
         self.childrenList = []
+
+    def init_tag_content(self,rough):
+        contentList = get_tag_content(rough)
+
+        for tagName, content in contentList:
+            if tagName == "ADD_DATE":
+                self.add_date = content
+            elif tagName == "LAST_MODIFIED":
+                self.last_modified = content
+            elif tagName == "ICON":
+                self.icon = content
+            elif tagName == "HREF":
+                self.link = content
+            elif tagName == "PERSONAL_TOOLBAR_FOLDER":
+                self.personal_toolbar_folder = True
+            else:
+                print("%s : %s" %(tagName, content))
+
 
     def add_child(self, child):
         child.set_parent(self)
@@ -91,7 +122,7 @@ def parse_html_to_treeView(fc : list) -> tree:
             root = tree(rough,i)  
             current = root
             parent = None
-            root.text = "rootFolder"
+           # root.text = "rootFolder"
             pass
         elif lineType == "newfolder": 
             #temp = tree(rough,i)
@@ -359,13 +390,89 @@ def save_new_bookMark_file(fc, outputName):
     file = open(outputName,"w", encoding="UTF-8")
     result = "".join(fc)
     file.write(result)
+
+def create_fc_from_tree(treeRoot):
+    fc,nextLineNum = create_default_fc_frame()
+
+    parent = treeRoot.parent
+    current = treeRoot 
+
+    # root process
     
+    create_folderFC(fc,treeRoot,0,nextLineNum)
+    create_fc_with_search_tree(fc,current,"",6)
+
+
+    return fc
+
+def create_fc_with_search_tree(fc,current,parent_space,parent_lineNum):
+
+    current_space = parent_space + '    '
+    lastIndex = get_folder_end(fc,parent_lineNum)
+    if current.type == 'bookMark':
+        create_bookMark(fc,current,parent_space,lastIndex)
+        pass
+    elif current.type == 'newfolderName' or current.type =="rootfolder":
+        create_folderFC(fc,current,parent_space,lastIndex)
+
+        for c in current.childrenList:
+            create_fc_with_search_tree(fc,c,current_space,lastIndex)
+        pass
+    else:
+        print("wrong")
+    pass
+
+def create_default_fc_frame():
+    fc = []
+    fc.append("<!DOCTYPE NETSCAPE-Bookmark-file-1>\n")
+    fc.append("<!-- This is an automatically generated file.\n")
+    fc.append("     It will be read and overwritten.\n")
+    fc.append("     DO NOT EDIT! -->\n")
+    fc.append('''<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">\n''')
+    fc.append("<TITLE>Bookmarks</TITLE>\n")
+
+    return fc,6
+
+
+def create_folderFC(fc, treeElem,parentSpace,targetLineNum):
+    if treeElem.type == "rootfolder":
+        fc.insert(targetLineNum,'''<H1>Bookmarks</H1>\n''')
+        fc.insert(targetLineNum + 1,'<DL><p>\n')
+        fc.insert(targetLineNum + 2,'</DL><p>\n')
+        
+    elif treeElem.type == 'newfolderName':
+        space = parentSpace + '    '
+        if treeElem.personal_toolbar_folder == True:
+            fc.insert(targetLineNum,space + '''<DT><H3 ADD_DATE="%s" LAST_MODIFIED="%s" PERSONAL_TOOLBAR_FOLDER="true">%s</H3>\n''' % (treeElem.add_date,treeElem.last_modified,treeElem.text))
+        else:
+            fc.insert(targetLineNum,space + '''<DT><H3 ADD_DATE="%s" LAST_MODIFIED="%s">%s</H3>\n''' % (treeElem.add_date,treeElem.last_modified,treeElem.text))            
+        fc.insert(targetLineNum + 1,space + '<DL><p>\n')
+        fc.insert(targetLineNum + 2,space + '</DL><p>\n')
+    else:
+        print("Not folder elem")
+
+    return fc
+    pass
+
+def create_bookMark(fc,treeElem,parentSpace,targetLineNum):
+    space = parentSpace + "    "
+    fc.insert(targetLineNum,space + '''<DT><A HREF="%s" ADD_DATE="%s" ICON="%s">%s</A>\n''' %(treeElem.link,treeElem.add_date,treeElem.icon,treeElem.text))
+
+    return fc
+
+
 if __name__ == "__main__":
 
     fc = get_fileContents("bookmarks_22. 10. 3..html")
 
     root = parse_html_to_treeView(fc)
 
+    fcT = create_fc_from_tree(root)
+    
+
+    save_new_bookMark_file(fcT, "result.html")
+
+    quit(0)
     # 북마크바
     folder = root.childrenList[0]
     sFolder =root.childrenList[0].childrenList[8] 
